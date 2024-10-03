@@ -1,0 +1,5 @@
+.env
+release/
+.idea/
+main
+plugin/webdav_root/
