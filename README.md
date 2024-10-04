@@ -35,7 +35,7 @@ docker run --rm \
 -e PLUGIN_HEADERS='Content-Type:application/json' \
 -e PLUGIN_TIMEOUT='30' \
 -e PLUGIN_OUTPUT_FILE='/tmp/output_6008.txt' \
-  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin 
+  -w /drone/src  -v $(pwd):/drone/src local/httprequest
 
 
 GET request with proxy usage
