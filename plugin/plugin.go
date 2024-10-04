@@ -132,7 +132,9 @@ func (p *Plugin) DeInit() error {
 		}
 	}
 
-	LogPrintln(p, "DeInit() called")
+	if err != nil {
+		LogPrintln(p, "DeInit() called with error:", err)
+	}
 	return err
 }
 
