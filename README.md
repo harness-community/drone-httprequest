@@ -46,7 +46,7 @@ docker run --rm \
 -e PLUGIN_TIMEOUT='30' \
 -e PLUGIN_IGNORE_SSL='true' \
 -e PLUGIN_PROXY='http://localhost:8888' \
-  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin
+  -w /drone/src  -v $(pwd):/drone/src local/httprequest
 
 Simple POST request
 docker run --rm \
