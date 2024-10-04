@@ -55,5 +55,5 @@ docker run --rm \
 -e PLUGIN_HEADERS='Content-Type:application/json' \
 -e PLUGIN_REQUEST_BODY='{"name":"drone"}' \
 -e PLUGIN_TIMEOUT='30' \
-  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin  
+  -w /drone/src  -v $(pwd):/drone/src local/httprequest
 ```
