@@ -25,7 +25,7 @@ docker run --rm \
 -e PLUGIN_HTTP_METHOD='GET' \
 -e PLUGIN_HEADERS='Content-Type:application/json' \
 -e PLUGIN_TIMEOUT='30' \
-  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin
+  -w /drone/src  -v $(pwd):/drone/src local/httprequest
 
 
 GET request with response logged in to a file
