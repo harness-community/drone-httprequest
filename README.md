@@ -7,20 +7,7 @@ The following settings changes this plugin's behavior.
 * param1 (optional) does something.
 * param2 (optional) does something different.
 
-Below is an example `.drone.yml` that uses this plugin.
-
-```yaml
-kind: pipeline
-name: default
-
-steps:
-- name: run senthilhns/drone_http_request_plugin plugin
-  image: senthilhns/drone_http_request_plugin
-  pull: if-not-exists
-  settings:
-    param1: foo
-    param2: bar
-```
+Below is an e
 
 # Building
 
@@ -41,12 +28,41 @@ docker build -t local/drone_http_request_plugin -f docker/Dockerfile .
 Execute the plugin from your current working directory:
 
 ```text
-docker run --rm -e PLUGIN_PARAM1=foo -e PLUGIN_PARAM2=bar \
-  -e DRONE_COMMIT_SHA=8f51ad7884c5eb69c11d260a31da7a745e6b78e2 \
-  -e DRONE_COMMIT_BRANCH=master \
-  -e DRONE_BUILD_NUMBER=43 \
-  -e DRONE_BUILD_STATUS=success \
-  -w /drone/src \
-  -v $(pwd):/drone/src \
-  senthilhns/drone_http_request_plugin
+Simple GET request
+docker run --rm \
+-e PLUGIN_URL='https://httpbin.org/get' \
+-e PLUGIN_HTTP_METHOD='GET' \
+-e PLUGIN_HEADERS='Content-Type:application/json' \
+-e PLUGIN_TIMEOUT='30' \
+  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin
+
+
+GET request with response logged in to a file
+docker run --rm \
+-e PLUGIN_URL='https://httpbin.org/get' \
+-e PLUGIN_HTTP_METHOD='GET' \
+-e PLUGIN_HEADERS='Content-Type:application/json' \
+-e PLUGIN_TIMEOUT='30' \
+-e PLUGIN_OUTPUT_FILE='/tmp/output_6008.txt' \
+  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin 
+
+
+GET request with proxy usage
+docker run --rm \
+-e PLUGIN_URL='https://httpbin.org/get' \
+-e PLUGIN_HTTP_METHOD='GET' \
+-e PLUGIN_HEADERS='Content-Type:application/json' \
+-e PLUGIN_TIMEOUT='30' \
+-e PLUGIN_IGNORE_SSL='true' \
+-e PLUGIN_PROXY='http://localhost:8888' \
+  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin
+
+Simple POST request
+docker run --rm \
+-e PLUGIN_URL='https://httpbin.org/post' \
+-e PLUGIN_HTTP_METHOD='POST' \
+-e PLUGIN_HEADERS='Content-Type:application/json' \
+-e PLUGIN_REQUEST_BODY='{"name":"drone"}' \
+-e PLUGIN_TIMEOUT='30' \
+  -w /drone/src  -v $(pwd):/drone/src local/drone_http_request_plugin  
 ```
