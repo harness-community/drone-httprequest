@@ -11,7 +11,7 @@ scripts/build.sh
 Build the plugin image:
 
 ```text
-docker build -t local/drone_http_request_plugin -f docker/Dockerfile .
+docker build -t local/httprequest -f docker/Dockerfile .
 ```
 
 # Testing
