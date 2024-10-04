@@ -1,14 +1,5 @@
 A plugin to http request plugin for Drone.
 
-# Usage
-
-The following settings changes this plugin's behavior.
-
-* param1 (optional) does something.
-* param2 (optional) does something different.
-
-Below is an e
-
 # Building
 
 Build the plugin binary:
