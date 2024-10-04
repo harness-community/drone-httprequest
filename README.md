@@ -1,4 +1,4 @@
-A plugin to http request plugin for Drone.
+The _httprequest_ plugin in Drone facilitates the automation of HTTP requests during CI/CD pipelines. It allows the user to send HTTP/HTTPS requests to specified endpoints and perform actions based on the response, similar to the Jenkins HTTP Request Plugin. Users can set headers, authenticate requests, define expected response codes, and configure timeouts.
 
 # Building
 
