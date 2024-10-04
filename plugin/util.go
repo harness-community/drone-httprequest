@@ -215,7 +215,12 @@ func WriteCommandsListToFile(fileName string, commandsList []string) {
 	}
 }
 
-func WriteEnvToFile(key string, value interface{}) error {
+func ConvertToBase64(input string) string {
+	encoded := base64.StdEncoding.EncodeToString([]byte(input))
+	return encoded
+}
+
+func WriteEnvToFile(key string, value interface{}, isBase64Encoded bool) error {
 
 	outputFile, err := os.OpenFile(os.Getenv("DRONE_OUTPUT"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -224,6 +229,10 @@ func WriteEnvToFile(key string, value interface{}) error {
 	defer outputFile.Close()
 
 	valueStr := fmt.Sprintf("%v", value)
+
+	if isBase64Encoded {
+		valueStr = ConvertToBase64(valueStr)
+	}
 
 	_, err = fmt.Fprintf(outputFile, "%s=%s\n", key, valueStr)
 	if err != nil {

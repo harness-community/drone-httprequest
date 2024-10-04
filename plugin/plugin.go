@@ -150,10 +150,6 @@ func (p *Plugin) Run() error {
 		return err
 	}
 
-	if p.httpResponse.StatusCode == http.StatusUnsupportedMediaType {
-		return errors.New(fmt.Sprintf("http.StatusUnsupportedMediaType == %d", http.StatusUnsupportedMediaType))
-	}
-
 	err = p.StoreHttpResponseResults()
 	if err != nil {
 		return err
@@ -240,6 +236,11 @@ func (p *Plugin) DoRequest() error {
 
 func (p *Plugin) CheckForValidResponseBody() error {
 
+	if p.httpResponse.StatusCode == http.StatusUnsupportedMediaType {
+		return errors.New(fmt.Sprintf("http.StatusUnsupportedMediaType == %d",
+			http.StatusUnsupportedMediaType))
+	}
+
 	if len(p.ValidResponseBody) < 1 {
 		return nil
 	}
@@ -258,10 +259,21 @@ func (p *Plugin) IsResponseStatusOk() error {
 	return nil
 }
 
+func (p *Plugin) LogResponseToConsole() {
+	if p.LogResponse {
+		fmt.Println("Writing Response Content to env var")
+		LogPrintln(p, p.ResponseContent)
+	}
+}
+
+func (p *Plugin) IsWriteResponseContentToFile() bool {
+	return len(p.OutputFile) > 0
+}
+
 func (p *Plugin) StoreHttpResponseResults() error {
 
-	if p.LogResponse {
-		LogPrintln(p, p.ResponseContent)
+	if !p.IsWriteResponseContentToFile() {
+		p.LogResponseToConsole()
 	}
 
 	headers := make([]string, 0, len(p.httpResponse.Header))
@@ -280,19 +292,24 @@ func (p *Plugin) StoreHttpResponseResults() error {
 	}
 
 	type EnvKvPair struct {
-		Key   string
-		Value interface{}
+		Key          string
+		Value        interface{}
+		IsBaseEncode bool
+	}
+
+	if len(p.OutputFile) > 0 {
+		p.ResponseContent = ""
 	}
 
 	var kvPairs = []EnvKvPair{
-		{"RESPONSE_STATUS", p.ResponseStatus},
-		{"RESPONSE_CONTENT", p.ResponseContent},
-		{"RESPONSE_HEADERS", p.ResponseHeaders},
-		{"RESPONSE_FILE", p.OutputFile},
+		{"RESPONSE_STATUS", p.ResponseStatus, false},
+		{"RESPONSE_FILE", p.OutputFile, false},
+		{"RESPONSE_CONTENT", p.ResponseContent, true},
+		{"RESPONSE_HEADERS", p.ResponseHeaders, true},
 	}
 
 	for _, kvPair := range kvPairs {
-		err := WriteEnvToFile(kvPair.Key, kvPair.Value)
+		err := WriteEnvToFile(kvPair.Key, kvPair.Value, kvPair.IsBaseEncode)
 		if err != nil {
 			return err
 		}
