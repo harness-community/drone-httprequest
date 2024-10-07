@@ -1,4 +1,4 @@
-module x/y
+module github.com/harness-community/drone-httprequest
 
 go 1.18
 
