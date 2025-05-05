@@ -3,6 +3,7 @@ package plugin
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -117,7 +118,7 @@ func TestGetRequestWithValidResponseBody(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
-
+	plugin.IsIgnoreWriteFiles = true
 	err := plugin.Run()
 	if err != nil {
 		t.Fatalf("Run() returned an error: %v", err)
@@ -295,7 +296,7 @@ func TestPositiveAuthBasic(t *testing.T) {
 		Args:                 args,
 		PluginProcessingInfo: PluginProcessingInfo{},
 	}
-
+	plugin.IsIgnoreWriteFiles = true
 	thisTestName := "TestPositiveAuthBasic"
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+thisTestName+"\n"+cli)
@@ -351,7 +352,7 @@ func TestNegativeAuthBasic(t *testing.T) {
 		Args:                 args,
 		PluginProcessingInfo: PluginProcessingInfo{},
 	}
-
+	plugin.IsIgnoreWriteFiles = true
 	thisTestName := "TestNegativeAuthBasic"
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+thisTestName+"\n"+cli)
@@ -403,7 +404,7 @@ func TestGetRequestAndWriteToFile(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
-
+	plugin.IsIgnoreWriteFiles = true
 	thisTestName := "TestGetRequestAndWriteToFile"
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+thisTestName+"\n"+cli)
@@ -464,6 +465,7 @@ func CheckForResponseLogging(t *testing.T, isLogResponse bool) {
 	}
 
 	plugin := GetNewPlugin(args)
+	plugin.IsIgnoreWriteFiles = true
 	if plugin == nil {
 		if isLogResponse {
 			plugin.LogResponse = true
@@ -582,7 +584,7 @@ func runPluginTest(t *testing.T, method, url, body, headers string) string {
 		Args:                 args,
 		PluginProcessingInfo: PluginProcessingInfo{},
 	}
-
+	plugin.IsIgnoreWriteFiles = true
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+method+"\n"+cli)
 	dockerCliCommands = append(dockerCliCommands, "# "+method+"\n"+dockerCli)
@@ -635,7 +637,7 @@ func TestGetRequestWithQuietMode(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
-
+	plugin.IsIgnoreWriteFiles = true
 	thisTestName := "TestGetRequestWithQuietMode"
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+thisTestName+"\n"+cli)
@@ -713,7 +715,7 @@ func TestMultipartFileUpload(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
-
+	plugin.IsIgnoreWriteFiles = true
 	err = plugin.Run()
 
 	thisTestName := "TestMultipartFileUpload"
@@ -771,7 +773,7 @@ func TestDirectFileUpload(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
-
+	plugin.IsIgnoreWriteFiles = true
 	thisTestName := "TestDirectFileUpload"
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+thisTestName+"\n"+cli)
@@ -812,7 +814,7 @@ func TestGetRequestUsingProxyWithoutPlugin(t *testing.T) {
 		t.Fatalf("Failed to read response body: %v", err)
 	}
 
-	fmt.Printf("Response from httpbin: %s\n", body)
+	log.Printf("Response from httpbin: %s\n", body)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("Expected status 200, but got %d", resp.StatusCode)
@@ -846,6 +848,7 @@ func TestGetRequestUsingProxyWithPlugin(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
+	plugin.IsIgnoreWriteFiles = true
 	cli, dockerCli := plugin.EmitCommandLine()
 	emittedCommands = append(emittedCommands, "# "+thisTestName+"\n"+cli)
 	dockerCliCommands = append(dockerCliCommands, "# "+thisTestName+"\n"+dockerCli)
@@ -886,7 +889,7 @@ func TestGetRequestWithAcceptType(t *testing.T) {
 	}
 
 	plugin := GetNewPlugin(args)
-
+	plugin.IsIgnoreWriteFiles = true
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		acceptHeader := r.Header.Get("Accept")
 		if acceptHeader != expectedAcceptType {
@@ -964,4 +967,76 @@ func TestGetRequestWithIncorrectAcceptType(t *testing.T) {
 	}
 
 	t.Logf("Test passed. Incorrect Accept header was correctly rejected by the server.")
+}
+
+var GoodCert = `-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
+N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
+o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
+5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
+rqXRfboQnoZsG4q5WTP468SQvvG5
+-----END CERTIFICATE-----`
+
+var BadCert = `-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
+N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
+o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
+5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
+rqXRfboQnoZsG4q5WTP468SQvvG5
+-----END CERTIFICATE-----`
+
+func TestGoodCertificate(t *testing.T) {
+	goodCertBytes := []byte(GoodCert)
+	_, err := checkTlsConfigWithClientCert(goodCertBytes, false)
+	if err != nil {
+		t.Fatalf("Good Cert failed")
+	}
+}
+
+func TestBadCertificate(t *testing.T) {
+	badCertBytes := []byte(BadCert)
+	_, err := checkTlsConfigWithClientCert(badCertBytes, false)
+	if err == nil {
+		t.Fatalf("Bad Cert failed")
+	}
+}
+
+// Function to create TLS configuration with client certificate
+func checkTlsConfigWithClientCert(caCert []byte, ignoreSsl bool) (*tls.Config, error) {
+	log.Println("Attempting to load certificate from:")
+
+	// Create a new certificate pool and append the custom CA certificate
+	caCertPool := x509.NewCertPool()
+	if !caCertPool.AppendCertsFromPEM(caCert) {
+		log.Println("Failed to append custom CA certificate:")
+		return nil, fmt.Errorf("failed to append CA certificate")
+	}
+
+	log.Println("Successfully loaded custom CA certificate")
+
+	// Return TLS configuration with only the custom CA
+	return &tls.Config{
+		RootCAs:            caCertPool,
+		InsecureSkipVerify: ignoreSsl,
+	}, nil
 }

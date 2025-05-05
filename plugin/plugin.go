@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -68,6 +69,7 @@ type PluginProcessingInfo struct {
 	proxyUrl                 *url.URL
 	uploadFileAbsolutePath   string
 	IsSuppressLogs           bool
+	IsIgnoreWriteFiles       bool
 }
 
 type PluginExecResultsCard struct {
@@ -263,7 +265,7 @@ func (p *Plugin) IsResponseStatusOk() error {
 
 func (p *Plugin) LogResponseToConsole() {
 	if p.LogResponse {
-		fmt.Println("Writing Response Content to env var")
+		log.Println("Writing Response Content to env var")
 		LogPrintln(p, p.ResponseContent)
 	}
 }
@@ -303,6 +305,9 @@ func (p *Plugin) StoreHttpResponseResults() error {
 		p.ResponseContent = ""
 	}
 
+	if p.IsIgnoreWriteFiles {
+		return nil
+	}
 	var kvPairs = []EnvKvPair{
 		{"RESPONSE_STATUS", p.ResponseStatus, false},
 		{"RESPONSE_FILE", p.OutputFile, false},
@@ -355,7 +360,6 @@ func (p *Plugin) GetNewHttpClient() {
 		Timeout: p.TimeOutDuration,
 	}
 }
-
 func (p *Plugin) SetSslCert() {
 	if p.AuthCert == "" || p.IgnoreSsl {
 		return
@@ -641,6 +645,35 @@ func (p *Plugin) ValidateHeader(headerStr string) error {
 
 func (p *PluginInputParams) EmitCommandLine() (string, string) {
 	return EmitCommandLineForPluginStruct(*p)
+}
+
+func (p *Plugin) LoadCACertificates(caCertPaths string) (*x509.CertPool, error) {
+	// Load system CA pool
+	sysCertPool, err := x509.SystemCertPool()
+	if err != nil {
+		log.Println("Warning: Failed to load system CA certificates:", err)
+		sysCertPool = x509.NewCertPool()
+	}
+
+	// Load custom CA if provided
+	if caCertPaths == "" {
+		return sysCertPool, nil
+	}
+
+	caCertPool := x509.NewCertPool()
+	certPaths := strings.Split(caCertPaths, ",")
+	for _, certPath := range certPaths {
+		certPath = strings.TrimSpace(certPath)
+		caCert, err := os.ReadFile(certPath)
+		if err != nil {
+			log.Println("Failed to read root certificate:", certPath, err)
+			return caCertPool, err
+		}
+		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+			log.Println("Failed to append root certificate:", certPath)
+		}
+	}
+	return caCertPool, nil
 }
 
 //
